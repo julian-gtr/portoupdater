@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden relative">
+
+    <div id="loading-overlay" class="fixed inset-0 z-[100] bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center hidden">
+        <div class="relative w-16 h-16 mb-4">
+            <div class="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-gray-800 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <h2 id="loading-text" class="text-xl font-bold text-gray-900 tracking-tight text-center px-4">Memproses...</h2>
+    </div>
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-gray-900/50 z-40 hidden md:hidden transition-opacity"></div>
+
+    <aside id="dash-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 glass border-r border-gray-200 flex flex-col transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 shadow-2xl md:shadow-none">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">Update Data</h2>
+            <button onclick="toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="nav-tabs">
+            <button onclick="switchTab('profil')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg bg-gray-100 text-gray-900 transition">Profil & Info</button>
+            <button onclick="switchTab('edu')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-50 transition">Pendidikan</button>
+            <button onclick="switchTab('exp')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-50 transition">Pengalaman</button>
+            <button onclick="switchTab('skill')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-50 transition">Skill & Sertifikasi</button>
+            <button onclick="switchTab('gallery')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-50 transition">Galeri</button>
+            <button onclick="switchTab('contact')" class="w-full flex items-center p-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-50 transition border-t border-gray-200 mt-2 pt-4">Data Kontak</button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="glass p-4 sticky top-0 z-30 border-b border-gray-200 flex justify-between items-center md:hidden shadow-sm">
+            <h2 class="text-lg font-bold text-gray-800">Porto Updater</h2>
+            <button onclick="toggleSidebar()" class="p-2 bg-gray-100 rounded hover:bg-gray-200 focus:outline-none">
+                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </header>
+
+        <div class="p-4 md:p-10 flex-1 overflow-y-auto relative w-full pb-28">
+            <div class="max-w-4xl mx-auto">
+                <form id="dashboardForm" class="space-y-8">
+                    
+                    <div id="profil" class="tab-content active">
+                        <h3 class="text-2xl font-bold mb-6">Profil Utama</h3>
+                        <div class="glass p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+                            <label class="block text-sm font-bold text-gray-700">Ganti Foto</label>
+                            <input type="file" id="profileFile" accept="image/*" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:bg-gray-800 file:text-white">
+                            <label class="block text-sm font-bold text-gray-700 mt-4">Teks Tentang Saya</label>
+                            <textarea id="aboutInput" class="w-full border-gray-200 bg-gray-50 p-4 rounded-xl outline-none" rows="5" placeholder="Tentang Saya..."></textarea>
+                        </div>
+                    </div>
+
+                    <div id="edu" class="tab-content">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-3">
+                            <h3 class="text-2xl font-bold">Pendidikan Baru</h3>
+                            <button type="button" onclick="addField('educationInputs', 'edu')" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium w-full md:w-auto">+ Tambah</button>
+                        </div>
+                        <div id="educationInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Data Tersimpan</h3>
+                        <div id="summary-edu" class="space-y-2">Memuat data...</div>
+                    </div>
+
+                    <div id="exp" class="tab-content">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-3">
+                            <h3 class="text-2xl font-bold">Pengalaman Baru</h3>
+                            <button type="button" onclick="addField('experienceInputs', 'exp')" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium w-full md:w-auto">+ Tambah</button>
+                        </div>
+                        <div id="experienceInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Data Tersimpan</h3>
+                        <div id="summary-exp" class="space-y-2">Memuat data...</div>
+                    </div>
+
+                    <div id="skill" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold">Skill Baru</h3>
+                            <button type="button" onclick="addSkillField('skillInputs')" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium">+ Tambah</button>
+                        </div>
+                        <div id="skillInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Skill Tersimpan</h3>
+                        <div id="summary-skill" class="space-y-2 mb-10">Memuat data...</div>
+
+                        <div class="flex justify-between items-center mb-6 border-t pt-6">
+                            <h3 class="text-xl md:text-2xl font-bold">Sertifikasi Baru</h3>
+                            <button type="button" onclick="addField('certInputs', 'cert')" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium">+ Tambah</button>
+                        </div>
+                        <div id="certInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Sertifikasi Tersimpan</h3>
+                        <div id="summary-cert" class="space-y-2">Memuat data...</div>
+                    </div>
+
+                    <div id="gallery" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold">Upload Galeri</h3>
+                            <button type="button" onclick="addGalleryField()" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium">+ Upload Foto</button>
+                        </div>
+                        <div id="galleryInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Galeri Tersimpan</h3>
+                        <div id="summary-gallery" class="grid grid-cols-1 sm:grid-cols-2 gap-4">Memuat data...</div>
+                    </div>
+
+                    <div id="contact" class="tab-content">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl md:text-2xl font-bold">Kontak Baru</h3>
+                            <button type="button" onclick="addContactField()" class="bg-white border shadow-sm px-4 py-2 rounded-lg text-sm font-medium">+ Tambah Kontak</button>
+                        </div>
+                        <div id="contactInputs" class="space-y-4 mb-10"></div>
+                        <h3 class="text-lg font-bold mb-4 border-t pt-6">Kontak Tersimpan</h3>
+                        <div id="summary-contact" class="space-y-2">Memuat data...</div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 md:left-64 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-200 flex justify-center md:justify-end z-20">
+            <button type="submit" form="dashboardForm" class="w-full md:w-auto bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 shadow-lg transition transform active:scale-95">
+                Simpan & Upload Data Baru
+            </button>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwEe2QFmBocQDhqgHUp9e6_OFKYMhG64ZLDA63S3vrPvFTKbVtdF9CGU0i_d2yRSvMk/exec';
+
+        // --- Logika Mobile Sidebar ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('dash-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            const btns = document.querySelectorAll('#nav-tabs button');
+            btns.forEach(btn => btn.className = "w-full flex items-center p-3 text-sm rounded-lg text-gray-500");
+            if(event && event.currentTarget.tagName === 'BUTTON') {
+                event.currentTarget.className = "w-full flex items-center p-3 text-sm rounded-lg bg-gray-100 text-gray-900 font-medium";
+            }
+            
+            // Tutup sidebar otomatis di layar mobile setelah klik menu
+            if (window.innerWidth < 768) { toggleSidebar(); }
+        }
+
+        function showLoader(text) {
+            document.getElementById('loading-text').innerText = text;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        function hideLoader() { document.getElementById('loading-overlay').classList.add('hidden'); }
+
+        // --- Form Builders ---
+        function addField(containerId, prefix) {
+            const div = document.createElement('div');
+            div.className = "glass p-4 rounded-xl border flex flex-col md:flex-row gap-3 relative";
+            div.innerHTML = `
+                <input type="text" placeholder="${prefix === 'edu' ? 'Gelar/Jurusan' : (prefix === 'exp' ? 'Posisi' : 'Sertifikat')}" class="bg-gray-50 p-3 w-full md:w-1/3 text-sm rounded outline-none ${prefix}-title">
+                <input type="text" placeholder="Institusi/Perusahaan" class="bg-gray-50 p-3 w-full md:w-1/3 text-sm rounded outline-none ${prefix}-org">
+                <input type="text" placeholder="Tahun" class="bg-gray-50 p-3 w-full md:w-1/3 text-sm rounded outline-none ${prefix}-year">
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-sm">×</button>
+            `;
+            document.getElementById(containerId).appendChild(div);
+        }
+
+        function addSkillField(containerId) {
+            const div = document.createElement('div');
+            div.className = "glass p-4 rounded-xl border flex flex-col gap-3 relative";
+            div.innerHTML = `
+                <input type="text" placeholder="Nama Skill" class="bg-gray-50 p-3 text-sm rounded outline-none skill-title">
+                <textarea placeholder="Deskripsi Singkat" class="bg-gray-50 p-3 text-sm rounded outline-none skill-desc" rows="2"></textarea>
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-sm">×</button>
+            `;
+            document.getElementById(containerId).appendChild(div);
+        }
+
+        function addGalleryField() {
+            const div = document.createElement('div');
+            div.className = "glass p-4 rounded-xl border flex flex-col gap-3 relative";
+            div.innerHTML = `
+                <input type="file" accept="image/*" class="text-sm gal-file bg-white border p-2 rounded">
+                <input type="text" placeholder="Deskripsi Foto" class="bg-gray-50 p-3 text-sm rounded outline-none gal-detail">
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-sm">×</button>
+            `;
+            document.getElementById('galleryInputs').appendChild(div);
+        }
+
+        function addContactField() {
+            const div = document.createElement('div');
+            div.className = "glass p-4 rounded-xl border flex flex-col md:flex-row gap-3 relative";
+            div.innerHTML = `
+                <select class="bg-gray-50 p-3 w-full md:w-1/4 text-sm rounded outline-none contact-type">
+                    <option value="Whatsapp">WhatsApp</option>
+                    <option value="Email">Email</option>
+                </select>
+                <input type="text" placeholder="Label Tampilan (Cth: Chat WA)" class="bg-gray-50 p-3 w-full md:w-1/3 text-sm rounded outline-none contact-label">
+                <input type="text" placeholder="No HP/Alamat Email" class="bg-gray-50 p-3 w-full md:w-1/3 text-sm rounded outline-none contact-link">
+                <button type="button" onclick="this.parentElement.remove()" class="absolute -top-3 -right-3 bg-red-100 text-red-600 rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-sm">×</button>
+            `;
+            document.getElementById('contactInputs').appendChild(div);
+        }
+
+        // --- Ambil & Hapus Data ---
+        async function fetchSummary() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                const buildList = (items, sheetName, formatHTML) => {
+                    if(!items || items.length === 0) return '<p class="text-sm text-gray-400 p-2 border border-dashed rounded text-center">Belum ada data</p>';
+                    return items.map(i => `
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-white p-4 border rounded-lg text-sm shadow-sm">
+                            <div class="flex-1">${formatHTML(i)}</div>
+                            <button type="button" onclick="deleteData('${sheetName}', ${i.rowIndex})" class="text-red-500 hover:bg-red-50 border border-red-100 px-4 py-2 rounded text-xs font-bold w-full sm:w-auto text-center">Hapus</button>
+                        </div>
+                    `).join('');
+                };
+
+                document.getElementById('summary-edu').innerHTML = buildList(data.education, 'Pendidikan', i => `<b>${i.title}</b><br><span class="text-gray-500">${i.organization}</span>`);
+                document.getElementById('summary-exp').innerHTML = buildList(data.experience, 'Pengalaman', i => `<b>${i.title}</b><br><span class="text-gray-500">${i.organization}</span>`);
+                document.getElementById('summary-cert').innerHTML = buildList(data.certifications, 'Sertifikasi', i => `<b>${i.title}</b><br><span class="text-gray-500">${i.organization}</span>`);
+                document.getElementById('summary-skill').innerHTML = buildList(data.skills, 'Skill', i => `<b>${i.title}</b><br><span class="text-xs text-gray-500">${i.desc}</span>`);
+                document.getElementById('summary-contact').innerHTML = buildList(data.contacts, 'Kontak', i => `<span class="bg-gray-100 px-2 py-1 rounded text-xs mr-2 border">${i.type}</span> <b>${i.label}</b><br><span class="text-xs text-gray-500 mt-1 block break-all">${i.link}</span>`);
+                
+                const galContainer = document.getElementById('summary-gallery');
+                if(!data.gallery || data.gallery.length === 0) { galContainer.innerHTML = '<p class="text-sm text-gray-400 col-span-1 sm:col-span-2 p-2 border border-dashed rounded text-center">Belum ada foto</p>'; } 
+                else {
+                    galContainer.innerHTML = data.gallery.map(g => `
+                        <div class="bg-white p-2 border rounded-xl relative shadow-sm">
+                            <img src="${g.url}" class="w-full h-32 object-cover rounded-lg mb-2">
+                            <p class="text-xs text-gray-600 truncate px-1">${g.detail}</p>
+                            <button type="button" onclick="deleteData('Galeri', ${g.rowIndex})" class="absolute top-3 right-3 bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-lg border-2 border-white hover:bg-red-600">×</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function deleteData(sheetName, rowIndex) {
+            if(!confirm(`Yakin ingin menghapus data baris ke-${rowIndex} di ${sheetName}?`)) return;
+            showLoader("Menghapus Data...");
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', sheetName, rowIndex }) });
+                await fetchSummary(); 
+            } catch(e) { alert("Gagal menghapus!"); }
+            hideLoader();
+        }
+
+        window.onload = () => { addField('educationInputs', 'edu'); addField('experienceInputs', 'exp'); addSkillField('skillInputs'); addGalleryField(); addContactField(); fetchSummary(); };
+
+        function getBase64(file) { return new Promise(resolve => { const r = new FileReader(); r.readAsDataURL(file); r.onload = () => resolve(r.result); }); }
+
+        document.getElementById('dashboardForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoader("Menyimpan & Mengunggah Data...");
+            
+            let p = { action: 'add', about: document.getElementById('aboutInput').value, education: [], experience: [], skills: [], certifications: [], gallery: [], contacts: [] };
+
+            try {
+                const profileFile = document.getElementById('profileFile').files[0];
+                if (profileFile) p.newProfileImageBase64 = await getBase64(profileFile);
+
+                const getMulti = (prefix, arr) => {
+                    const t = document.querySelectorAll(`.${prefix}-title`); const o = document.querySelectorAll(`.${prefix}-org`); const y = document.querySelectorAll(`.${prefix}-year`);
+                    for (let i=0; i<t.length; i++) if(t[i].value||o[i].value) arr.push({title: t[i].value, organization: o[i].value, year: y[i].value});
+                };
+                getMulti('edu', p.education); getMulti('exp', p.experience); getMulti('cert', p.certifications);
+
+                const skT = document.querySelectorAll('.skill-title'); const skD = document.querySelectorAll('.skill-desc');
+                for (let i=0; i<skT.length; i++) if(skT[i].value) p.skills.push({title: skT[i].value, desc: skD[i].value});
+
+                const gF = document.querySelectorAll('.gal-file'); const gD = document.querySelectorAll('.gal-detail');
+                for (let i=0; i<gF.length; i++) {
+                    if(gF[i].files[0] || gD[i].value) {
+                        let item = { detail: gD[i].value };
+                        if(gF[i].files[0]) item.newImageBase64 = await getBase64(gF[i].files[0]);
+                        p.gallery.push(item);
+                    }
+                }
+
+                const cT = document.querySelectorAll('.contact-type'); const cL = document.querySelectorAll('.contact-label'); const cLink = document.querySelectorAll('.contact-link');
+                for (let i=0; i<cT.length; i++) {
+                    if(cL[i].value || cLink[i].value) p.contacts.push({ type: cT[i].value, label: cL[i].value, link: cLink[i].value });
+                }
+
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(p) });
+                document.getElementById('dashboardForm').reset();
+                await fetchSummary(); 
+                alert("Data Baru Berhasil Ditambahkan!");
+            } catch(err) { alert("Terjadi kesalahan sistem. Cek koneksi Anda."); }
+            hideLoader();
+        });
+    </script>
+</body>
+</html>
